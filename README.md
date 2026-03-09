@@ -1,32 +1,29 @@
 
-# BCM Trading Telegram Generator V2
+# BCM Trading Telegram Generator V3
 
-Premium Telegram result image generator for BCM Trading.
+V3 är en mer premium version av generatorn, byggd för Telegram.
 
-## Features
-- 1080x1350 PNG output
-- 5 random profit texts
-- 5 random loss texts
-- profit/loss badge
-- dark premium trading design
-- candlestick background
-- glow effect on result
-- integrated logo support via `assets/logo.png`
+## Nytt i V3
+- större resultatsiffra
+- renare layout med central panel
+- förbättrad badge-design
+- färdig Telegram-caption genereras i response headers
+- BCM-logga via `assets/logo.png`
+- premium bakgrund med candlesticks och glow
 
-## Deploy on Render
-
-Build command:
+## Deploy på Render
+Build:
 `pip install -r requirements.txt`
 
-Start command:
+Start:
 `gunicorn --bind 0.0.0.0:$PORT app:app`
 
-## Input examples
-- `3.74`
-- `-1.20`
-
-## Files
+## Filer
 - `app.py`
 - `requirements.txt`
 - `render.yaml`
 - `assets/logo.png`
+
+## Input
+- `3.74`
+- `-1.20`

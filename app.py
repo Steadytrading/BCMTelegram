@@ -4,6 +4,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import random
 import os
 import io
+import textwrap
 
 app = Flask(__name__)
 
@@ -30,12 +31,26 @@ PROFIT_BADGES = [
     "LOW RISK STRATEGY",
     "CONSISTENT GAINS",
     "DISCIPLINED EXECUTION",
+    "PRECISION ENTRIES",
 ]
 
 LOSS_BADGES = [
     "CAPITAL PROTECTION",
     "RISK MANAGED DAY",
     "DEFENSIVE SESSION",
+    "CONTROLLED DRAWDOWN",
+]
+
+CAPTIONS_PROFIT = [
+    "Today's result: {result}\n\nAnother strong day from BCM Trading.\nDisciplined execution and strict risk management remain the foundation.\n\nCopy trading available on Vantage.",
+    "Today's result: {result}\n\nSolid session with controlled risk and high-probability execution.\nBCM Trading stays focused on consistency over hype.\n\nCopy trading available on Vantage.",
+    "Today's result: {result}\n\nA clean trading day built on patience, precision and capital protection.\n\nBCM Trading",
+]
+
+CAPTIONS_LOSS = [
+    "Today's result: {result}\n\nNot every session ends green.\nRisk stayed controlled and capital protection came first.\n\nBCM Trading",
+    "Today's result: {result}\n\nA defensive day, but discipline remains intact.\nLong-term consistency is built through strict risk management.\n\nCopy trading available on Vantage.",
+    "Today's result: {result}\n\nSmall setback. Strategy and risk plan were respected throughout the session.\n\nBCM Trading",
 ]
 
 HTML = """
@@ -43,66 +58,74 @@ HTML = """
 <html lang="sv">
 <head>
   <meta charset="utf-8">
-  <title>BCM Trading Telegram Generator V2</title>
+  <title>BCM Trading Generator V3</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #08101e, #131a2e);
+      background: radial-gradient(circle at top, #13203d, #08101e 55%);
       color: #fff;
       padding: 40px;
+      margin: 0;
     }
     .box {
-      max-width: 560px;
+      max-width: 620px;
       margin: auto;
-      background: rgba(19,26,46,.95);
-      padding: 32px;
-      border-radius: 20px;
-      box-shadow: 0 18px 50px rgba(0,0,0,.35);
-      border: 1px solid rgba(255,255,255,.06);
+      background: rgba(12,18,34,.96);
+      padding: 34px;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+      border: 1px solid rgba(255,255,255,.07);
     }
-    h1 {
-      margin-top: 0;
-      font-size: 32px;
-    }
-    p {
-      color: #c5cee4;
-      line-height: 1.5;
-    }
+    h1 { margin: 0 0 10px 0; font-size: 34px; }
+    p { color: #c5cee4; line-height: 1.55; }
+    label { display:block; margin-top: 18px; margin-bottom: 8px; font-weight: 700; }
     input, button {
       width: 100%;
-      padding: 14px;
-      border-radius: 12px;
+      padding: 15px 16px;
+      border-radius: 14px;
       border: none;
       font-size: 16px;
       box-sizing: border-box;
     }
-    input {
-      margin: 14px 0;
-      background: #eef2ff;
-    }
+    input { background: #eef2ff; }
     button {
-      background: #2d6cdf;
+      background: linear-gradient(135deg, #2d6cdf, #1d9bf0);
       color: white;
       cursor: pointer;
       font-weight: 700;
+      margin-top: 18px;
     }
     .hint {
-      color: #b7bfd6;
+      color: #9fb0d7;
       font-size: 14px;
       margin-top: 14px;
+    }
+    .tag {
+      display:inline-block;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      font-size: 13px;
+      margin-right: 8px;
+      margin-bottom: 8px;
     }
   </style>
 </head>
 <body>
   <div class="box">
-    <h1>BCM Trading Generator V2</h1>
-    <p>Premium Telegram-resultatbild med glow-effekt, candlestick-bakgrund, slumpad vinst/förlusttext och integrerad BCM-logga.</p>
+    <h1>BCM Trading Generator V3</h1>
+    <p>Premium Telegram-resultatbild med starkare layout, större resultatsiffra, förbättrad badge och färdig caption i svaret.</p>
+    <div>
+      <span class="tag">1080x1350 PNG</span>
+      <span class="tag">Premium layout</span>
+      <span class="tag">Telegram-ready</span>
+    </div>
     <form method="post" action="/generate">
       <label>Dagens resultat i %</label>
       <input name="result" placeholder="t.ex. 3.74 eller -1.20" required>
       <button type="submit">Generera Telegram-bild</button>
     </form>
-    <p class="hint">Output: 1080x1350 PNG</p>
+    <p class="hint">Generatorn slumpas mellan olika texter för både vinst och förlust.</p>
   </div>
 </body>
 </html>
@@ -131,31 +154,32 @@ def draw_centered(draw, text, y, font, fill):
     x = (WIDTH - w) / 2
     draw.text((x, y), text, font=font, fill=fill)
 
-def add_glow_text(base, text, y, font, text_fill, glow_fill, blur_radius=18):
+def add_glow_text(base, text, y, font, text_fill, glow_fill, blur_radius=22):
     glow = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
     gdraw = ImageDraw.Draw(glow)
     bbox = gdraw.textbbox((0, 0), text, font=font)
     w = bbox[2] - bbox[0]
     x = int((WIDTH - w) / 2)
-    gdraw.text((x, y), text, font=font, fill=glow_fill)
+    for _ in range(2):
+        gdraw.text((x, y), text, font=font, fill=glow_fill)
     glow = glow.filter(ImageFilter.GaussianBlur(blur_radius))
     base.alpha_composite(glow)
     draw = ImageDraw.Draw(base)
     draw.text((x, y), text, font=font, fill=text_fill)
 
 def draw_candles(draw):
-    baseline = 980
-    start_x = 80
+    baseline = 960
+    start_x = 85
     candle_w = 18
     gap = 14
     for i in range(26):
         x = start_x + i * (candle_w + gap)
-        body_h = random.randint(40, 180)
-        wick_top = random.randint(20, 70)
-        wick_bottom = random.randint(20, 70)
+        body_h = random.randint(50, 190)
+        wick_top = random.randint(18, 65)
+        wick_bottom = random.randint(18, 65)
         green = random.choice([True, False, True])
-        color = (37, 211, 102, 130) if green else (255, 82, 82, 130)
-        top = baseline - body_h - random.randint(-120, 120)
+        color = (37, 211, 102, 125) if green else (255, 82, 82, 125)
+        top = baseline - body_h - random.randint(-100, 100)
         bottom = top + body_h
         center_x = x + candle_w // 2
         draw.line((center_x, top - wick_top, center_x, bottom + wick_bottom), fill=color, width=3)
@@ -167,17 +191,17 @@ def add_gradient_background():
     for y in range(HEIGHT):
         for x in range(WIDTH):
             r = 8
-            g = 12 + int(20 * y / HEIGHT)
-            b = 24 + int(40 * y / HEIGHT)
+            g = 12 + int(26 * y / HEIGHT)
+            b = 24 + int(52 * y / HEIGHT)
             px[x, y] = (r, g, b, 255)
     return img
 
 def add_vignette(base):
     overlay = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
     odraw = ImageDraw.Draw(overlay)
-    for i in range(120):
-        alpha = int(2.2 * i)
-        odraw.rounded_rectangle((i, i, WIDTH - i, HEIGHT - i), radius=40, outline=(0, 0, 0, alpha))
+    for i in range(130):
+        alpha = int(2.15 * i)
+        odraw.rounded_rectangle((i, i, WIDTH - i, HEIGHT - i), radius=48, outline=(0, 0, 0, alpha))
     base.alpha_composite(overlay)
 
 def try_add_logo(base):
@@ -188,11 +212,32 @@ def try_add_logo(base):
     for path in logo_paths:
         if os.path.exists(path):
             logo = Image.open(path).convert("RGBA")
-            logo.thumbnail((520, 300))
+            logo.thumbnail((500, 250))
             x = (WIDTH - logo.width) // 2
-            base.alpha_composite(logo, (x, 70))
+            base.alpha_composite(logo, (x, 66))
             return True
     return False
+
+def wrap_line(draw, text, font, max_width):
+    words = text.split()
+    lines = []
+    current = ""
+    for word in words:
+        test = word if not current else current + " " + word
+        bbox = draw.textbbox((0, 0), test, font=font)
+        if bbox[2] - bbox[0] <= max_width:
+            current = test
+        else:
+            if current:
+                lines.append(current)
+            current = word
+    if current:
+        lines.append(current)
+    return lines
+
+def build_caption(is_profit, result_text):
+    pool = CAPTIONS_PROFIT if is_profit else CAPTIONS_LOSS
+    return random.choice(pool).format(result=result_text)
 
 def generate_image(result_value):
     is_profit = result_value >= 0
@@ -203,69 +248,88 @@ def generate_image(result_value):
     base = add_gradient_background()
     draw = ImageDraw.Draw(base)
 
-    for x in range(0, WIDTH, 60):
-        draw.line((x, 0, x, HEIGHT), fill=(40, 70, 110, 40), width=1)
-    for y in range(0, HEIGHT, 60):
-        draw.line((0, y, WIDTH, y), fill=(40, 70, 110, 40), width=1)
+    for x in range(0, WIDTH, 54):
+        draw.line((x, 0, x, HEIGHT), fill=(40, 70, 110, 36), width=1)
+    for y in range(0, HEIGHT, 54):
+        draw.line((0, y, WIDTH, y), fill=(40, 70, 110, 36), width=1)
 
     light = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
     ldraw = ImageDraw.Draw(light)
-    ldraw.ellipse((160, 260, 920, 1020), fill=(40, 120, 255, 28))
-    light = light.filter(ImageFilter.GaussianBlur(60))
+    ldraw.ellipse((140, 220, 940, 1040), fill=(40, 120, 255, 34))
+    ldraw.ellipse((250, 420, 830, 900), fill=((45, 180, 255, 26) if is_profit else (255, 80, 80, 24)))
+    light = light.filter(ImageFilter.GaussianBlur(75))
     base.alpha_composite(light)
 
     draw_candles(draw)
     add_vignette(base)
 
+    # subtle panel
+    panel = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+    pdraw = ImageDraw.Draw(panel)
+    pdraw.rounded_rectangle((85, 360, WIDTH - 85, 1210), radius=34, fill=(12, 20, 36, 92), outline=(255, 255, 255, 18), width=2)
+    panel = panel.filter(ImageFilter.GaussianBlur(1))
+    base.alpha_composite(panel)
+
     added_logo = try_add_logo(base)
     draw = ImageDraw.Draw(base)
 
-    title_font = load_font(42, bold=True)
-    result_font = load_font(140, bold=True)
-    body_font = load_font(42, bold=False)
-    badge_font = load_font(34, bold=True)
-    brand_font = load_font(36, bold=True)
+    title_font = load_font(38, bold=True)
+    result_font = load_font(168, bold=True)
+    body_font = load_font(40, bold=False)
+    badge_font = load_font(32, bold=True)
+    brand_font = load_font(34, bold=True)
+    small_font = load_font(27, bold=False)
 
     if not added_logo:
-        draw_centered(draw, "BCM TRADING", 110, load_font(64, bold=True), (235, 240, 255, 255))
+        draw_centered(draw, "BCM TRADING", 96, load_font(62, bold=True), (235, 240, 255, 255))
 
-    draw_centered(draw, "TODAY'S RESULT", 410, title_font, (210, 220, 245, 230))
+    draw_centered(draw, "TODAY'S RESULT", 410, title_font, (212, 223, 247, 235))
 
     if is_profit:
-        add_glow_text(base, result_text, 510, result_font, (255, 255, 255, 255), (40, 210, 110, 150))
+        add_glow_text(base, result_text, 485, result_font, (255, 255, 255, 255), (40, 210, 110, 165))
     else:
-        add_glow_text(base, result_text, 510, result_font, (255, 255, 255, 255), (255, 70, 70, 150))
+        add_glow_text(base, result_text, 485, result_font, (255, 255, 255, 255), (255, 70, 70, 165))
 
-    body_lines = [
-        body_text,
+    accent = (42, 210, 115, 230) if is_profit else (235, 82, 82, 230)
+    draw.rounded_rectangle((300, 690, 780, 696), radius=8, fill=accent)
+
+    max_width = WIDTH - 260
+    wrapped = wrap_line(draw, body_text, body_font, max_width)
+    y = 748
+    for line in wrapped[:2]:
+        draw_centered(draw, line, y, body_font, (230, 236, 248, 225))
+        y += 50
+
+    fixed_lines = [
         "BCM Trading focuses on disciplined entries",
-        "and strict risk management.",
+        "strict risk management and steady execution.",
     ]
-    y = 730
-    for line in body_lines:
-        draw_centered(draw, line, y, body_font, (228, 234, 246, 220))
-        y += 54
+    y += 18
+    for line in fixed_lines:
+        draw_centered(draw, line, y, small_font, (184, 198, 225, 220))
+        y += 40
 
-    badge_y = 940
     badge_bbox = draw.textbbox((0, 0), badge_text, font=badge_font)
     badge_w = badge_bbox[2] - badge_bbox[0]
-    pad_x = 34
-    pad_y = 20
+    pad_x = 30
+    pad_y = 18
     bx1 = (WIDTH - badge_w) // 2 - pad_x
     bx2 = (WIDTH + badge_w) // 2 + pad_x
-    by1 = badge_y - pad_y
-    by2 = badge_y + (badge_bbox[3] - badge_bbox[1]) + pad_y
-    badge_color = (32, 190, 100, 210) if is_profit else (210, 70, 70, 210)
+    by1 = 972
+    by2 = by1 + (badge_bbox[3] - badge_bbox[1]) + pad_y * 2
+    badge_color = (26, 170, 92, 220) if is_profit else (186, 58, 58, 220)
     draw.rounded_rectangle((bx1, by1, bx2, by2), radius=24, fill=badge_color)
-    draw_centered(draw, badge_text, badge_y, badge_font, (255, 255, 255, 255))
+    draw_centered(draw, badge_text, by1 + pad_y - 2, badge_font, (255, 255, 255, 255))
 
-    draw_centered(draw, "Copy trading available on Vantage", 1110, load_font(28), (188, 198, 222, 200))
-    draw_centered(draw, "BCM Trading", 1160, brand_font, (255, 255, 255, 235))
+    draw_centered(draw, "Copy trading available on Vantage", 1115, small_font, (192, 203, 228, 210))
+    draw_centered(draw, "BCM Trading", 1162, brand_font, (255, 255, 255, 238))
 
     output = io.BytesIO()
     base.convert("RGB").save(output, format="PNG")
     output.seek(0)
-    return output
+
+    caption = build_caption(is_profit, result_text)
+    return output, caption, badge_text
 
 @app.route("/", methods=["GET"])
 def index():
@@ -279,9 +343,12 @@ def generate():
     except ValueError:
         return "Ogiltigt värde. Skriv t.ex. 3.74 eller -1.20", 400
 
-    image_bytes = generate_image(result_value)
+    image_bytes, caption, badge = generate_image(result_value)
     filename = f"bcm_result_{result_value:+.2f}.png".replace("+", "plus_").replace("-", "minus_")
-    return send_file(image_bytes, mimetype="image/png", as_attachment=True, download_name=filename)
+    response = send_file(image_bytes, mimetype="image/png", as_attachment=True, download_name=filename)
+    response.headers["X-Generated-Caption"] = caption
+    response.headers["X-Generated-Badge"] = badge
+    return response
 
 if __name__ == "__main__":
     app.run(debug=True)
