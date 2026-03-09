@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: bcm-trading-generator-v3
+    name: bcm-trading-generator-v3-fix
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
