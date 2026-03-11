@@ -7,7 +7,7 @@ app = Flask(__name__)
 WIDTH, HEIGHT = 1080, 1350
 
 PROFIT_TEXTS = [
-    "Disciplined execution. Strong result today.",
+    "Disciplined execution. Strong result yesterday.",
     "Another solid session with controlled risk.",
     "High probability entries delivered today.",
     "Steady performance with capital protection first.",
@@ -153,7 +153,7 @@ def generate_image(result_value):
 
     if not added_logo:
         draw_centered(draw, "BCM TRADING", 96, load_font(62, True), (235,240,255,255))
-    draw_centered(draw, "TODAY'S RESULT", 410, title_font, (212,223,247,235))
+    draw_centered(draw, "YESTERDAY'S RESULT", 410, title_font, (212,223,247,235))
     add_glow_text(base, result_text, 485, result_font, (255,255,255,255), (40,210,110,165) if is_profit else (255,70,70,165))
     draw.rounded_rectangle((300,690,780,696), radius=8, fill=(42,210,115,230) if is_profit else (235,82,82,230))
 
