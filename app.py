@@ -84,7 +84,7 @@ HTML = '''
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>PCM Trading Generator V3</h1>
+      <h1>BCM Trading Generator V3</h1>
       <p>Standalone daily, weekly and monthly posters in 1080x1350. The image is returned as a file download.</p>
       <p class="hint">No strategy label is shown in the artwork. Use the same seed if you want deterministic random text and badges.</p>
     </div>
@@ -95,7 +95,7 @@ HTML = '''
         <label>Result (%)</label>
         <input type="text" name="result" value="3.74" required>
         <label>Brand</label>
-        <input type="text" name="brand" value="PCM Trading">
+        <input type="text" name="brand" value="BCM Trading">
         <label>Seed (optional)</label>
         <input type="text" name="seed" placeholder="2026-03-09">
         <button type="submit">Download daily PNG</button>
@@ -137,7 +137,7 @@ HTML = '''
           </div>
         </div>
         <label>Brand</label>
-        <input type="text" name="brand" value="PCM Trading">
+        <input type="text" name="brand" value="BCM Trading">
         <label>Seed (optional)</label>
         <input type="text" name="seed" placeholder="2026-03">
         <button type="submit">Download monthly PNG</button>
